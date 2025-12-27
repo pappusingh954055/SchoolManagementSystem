@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/Services/" />
+  <Folder Name="/Services/ApiGateway/">
+    <Project Path="ApiGateway/ApiGateway.csproj" Id="ea2cac58-2be2-45c2-b89a-306263a938f3" />
+  </Folder>
   <Folder Name="/Services/Employee/">
     <Project Path="Employee.API/Employee.API.csproj" Id="130572a1-1114-4454-8c1d-b5e875cff7ba" />
     <Project Path="Employee.Application/Employee.Application.csproj" Id="e6a6d665-10c4-446b-9d88-c13acbf1a2e9" />

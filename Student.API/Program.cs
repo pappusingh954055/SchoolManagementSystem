@@ -30,9 +30,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            RoleClaimType = ClaimTypes.Role,
-            NameClaimType = ClaimTypes.NameIdentifier,
-
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
@@ -40,8 +37,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
             ValidIssuer = jwt["Issuer"],
             ValidAudience = jwt["Audience"],
+
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwt["Key"]!))
+                Encoding.UTF8.GetBytes(jwt["Key"]!)
+            ),
+
+            RoleClaimType = ClaimTypes.Role
         };
     });
 

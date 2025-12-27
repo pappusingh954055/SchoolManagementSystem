@@ -1,28 +1,18 @@
-﻿using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Scalar.AspNetCore;
-using School.Application;
-using School.Infrastructure;
 using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ---------------- Controllers ----------------
-//builder.Services.AddControllers();
+// Add services to the container.
 
-// ---------------- FluentValidation (LATEST WAY) ----------------
-builder.Services.AddValidatorsFromAssembly(
-    typeof(School.Application.DependencyInjection).Assembly);
+builder.Services.AddControllers();
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
 
-// ---------------- Application Layer ----------------
-builder.Services.AddSchoolApplication();
-
-// ---------------- Infrastructure Layer ----------------
-builder.Services.AddSchoolInfrastructure(builder.Configuration);
-
-// ---------------- JWT Authentication ----------------
+// ---------------- JWT AUTH ----------------
+// ---------------- JWT VALIDATION ----------------
 var jwt = builder.Configuration.GetSection("Jwt");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -42,34 +32,34 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(jwt["Key"]!)
             ),
 
-            RoleClaimType = ClaimTypes.Role
+            RoleClaimType = ClaimTypes.Role,
+            NameClaimType = ClaimTypes.NameIdentifier
         };
     });
 
 
 builder.Services.AddAuthorization();
 
-// ---------------- OpenAPI + Scalar ----------------
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+// ---------------- YARP ----------------
+builder.Services
+    .AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
 var app = builder.Build();
 
-// ---------------- HTTP PIPELINE ----------------
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference(); // Authorize button
 }
 
 app.UseHttpsRedirection();
 
-// ✅ REQUIRED FOR PHOTO ACCESS
-app.UseStaticFiles();
-
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapReverseProxy();
 
 app.Run();

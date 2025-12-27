@@ -1,8 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using School.API.Helpers;
 using School.API.Models;
 using School.Application.Commands.CreateSchool;
 using School.Application.Commands.UpdateSchool;
@@ -38,13 +36,7 @@ namespace School.API.Controllers
             return Ok(result.Value);
         }
 
-        //[HttpPut]
-        //[Authorize(Roles = "Admin")]
-        //public async Task<IActionResult> Update(UpdateSchoolCommand command)
-        //{
-        //    var result = await _mediator.Send(command);
-        //    return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
-        //}
+
 
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = "Admin")]
