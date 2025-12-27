@@ -5,26 +5,41 @@ namespace School.Domain.Entities;
 public class School
 {
     public Guid Id { get; private set; }
-
-    public SchoolCode Code { get; private set; } = default!;
+    public string Code { get; private set; } = default!;
     public string Name { get; private set; } = default!;
-    public string Line1 { get; set; } = default!;
-    public string City { get; set; } = default!;
-    public string State { get; set; } = default!;
-    public string Country { get; set; } = default!;
-    public string PostalCode { get; set; } = default!;
+    public Address Address { get; private set; } = default!;
+    public string? PhotoUrl { get; private set; }
 
-    private School() { } // EF Core
+    public DateTime? CreatedDate { get; set; } = DateTime.UtcNow;
 
-    public School(SchoolCode code, string name, string line1, string city, string state, string country, string postalcode)
+    public DateTime UpdatedDate { get; set; } = DateTime.UtcNow;
+
+    private School() { } // EF
+
+    public School(string code, string name, Address address, string? photoUrl = null)
     {
         Id = Guid.NewGuid();
         Code = code;
-        Name = name;
-        Line1 = line1;
-        City = city;
-        State = state;
-        Country = country;
-        PostalCode = postalcode;
+        UpdateName(name);
+        Address = address;
+        PhotoUrl = photoUrl;
+    }
+
+    public void UpdateName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("School name cannot be empty");
+
+        Name = name.Trim();
+    }
+
+    public void UpdateAddress(Address address)
+    {
+        Address = address;
+    }
+
+    public void UpdatePhoto(string? photoUrl)
+    {
+        PhotoUrl = photoUrl;
     }
 }

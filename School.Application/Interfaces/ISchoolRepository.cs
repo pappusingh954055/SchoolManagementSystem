@@ -7,5 +7,6 @@ public interface ISchoolRepository
     Task AddAsync(School.Domain.Entities.School school);
     Task<School.Domain.Entities.School?> GetByIdAsync(Guid id);
     Task<bool> ExistsByCodeAsync(string code);
+    void Remove(School.Domain.Entities.School school);
     Task SaveChangesAsync();
 }

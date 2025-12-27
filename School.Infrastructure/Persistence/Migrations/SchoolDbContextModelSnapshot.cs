@@ -28,28 +28,62 @@ namespace School.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("PhotoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
-                    b.ToTable("Schools", (string)null);
+                    b.ToTable("Schools");
                 });
 
             modelBuilder.Entity("School.Domain.Entities.School", b =>
                 {
-                    b.OwnsOne("School.Domain.ValueObjects.SchoolCode", "Code", b1 =>
+                    b.OwnsOne("School.Domain.ValueObjects.Address", "Address", b1 =>
                         {
                             b1.Property<Guid>("SchoolId")
                                 .HasColumnType("uniqueidentifier");
 
-                            b1.Property<string>("Value")
+                            b1.Property<string>("City")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("Code");
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("City");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("Country");
+
+                            b1.Property<string>("Line1")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("Line1");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("PostalCode");
+
+                            b1.Property<string>("State")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("State");
 
                             b1.HasKey("SchoolId");
 
@@ -59,7 +93,7 @@ namespace School.Infrastructure.Persistence.Migrations
                                 .HasForeignKey("SchoolId");
                         });
 
-                    b.Navigation("Code")
+                    b.Navigation("Address")
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

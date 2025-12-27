@@ -1,21 +1,16 @@
 ﻿namespace School.Domain.ValueObjects;
 
-public sealed class Address
+public class Address
 {
-    public string Line1 { get; }
-    public string City { get; }
-    public string State { get; }
-    public string Country { get; }
-    public string PostalCode { get; }
+    public string Line1 { get; private set; } = default!;
+    public string City { get; private set; } = default!;
+    public string State { get; private set; } = default!;
+    public string Country { get; private set; } = default!;
+    public string PostalCode { get; private set; } = default!;
 
-    private Address() { }
+    private Address() { } // EF
 
-    private Address(
-        string line1,
-        string city,
-        string state,
-        string country,
-        string postalCode)
+    private Address(string line1, string city, string state, string country, string postalCode)
     {
         Line1 = line1;
         City = city;
@@ -43,12 +38,6 @@ public sealed class Address
         if (string.IsNullOrWhiteSpace(postalCode))
             throw new ArgumentException("Postal code is required");
 
-        return new Address(
-            line1.Trim(),
-            city.Trim(),
-            state?.Trim(),
-            country.Trim(),
-            postalCode?.Trim()
-        );
+        return new Address(line1, city, state, country, postalCode);
     }
 }

@@ -6,5 +6,6 @@
      string City,
      string State,
      string Country,
-     string PostalCode
+     string PostalCode,
+     string? PhotoUrl
 );

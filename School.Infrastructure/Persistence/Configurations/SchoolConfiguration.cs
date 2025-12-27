@@ -12,17 +12,42 @@ public class SchoolConfiguration : IEntityTypeConfiguration<Domain.Entities.Scho
 
         builder.HasKey(x => x.Id);
 
+        // ---------------- Code (IDENTITY – STRING) ----------------
+        builder.Property(x => x.Code)
+               .IsRequired()
+               .HasMaxLength(50);
+
+        // ---------------- Name ----------------
         builder.Property(x => x.Name)
                .IsRequired()
                .HasMaxLength(200);
 
-        // ✅ VALUE OBJECT MAPPING (ONLY THIS)
-        builder.OwnsOne(x => x.Code, cb =>
+        // ---------------- Photo ----------------
+        builder.Property(x => x.PhotoUrl)
+               .HasMaxLength(500);
+
+        // ---------------- Address (VALUE OBJECT) ----------------
+        builder.OwnsOne(x => x.Address, address =>
         {
-            cb.Property(c => c.Value)
-              .HasColumnName("Code")
-              .IsRequired()
-              .HasMaxLength(50);
+            address.Property(a => a.Line1)
+                   .HasColumnName("Line1")
+                   .IsRequired();
+
+            address.Property(a => a.City)
+                   .HasColumnName("City")
+                   .IsRequired();
+
+            address.Property(a => a.State)
+                   .HasColumnName("State")
+                   .IsRequired();
+
+            address.Property(a => a.Country)
+                   .HasColumnName("Country")
+                   .IsRequired();
+
+            address.Property(a => a.PostalCode)
+                   .HasColumnName("PostalCode")
+                   .IsRequired();
         });
     }
 }

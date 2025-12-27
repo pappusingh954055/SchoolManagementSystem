@@ -27,13 +27,13 @@ public class GetSchoolByIdQueryHandler
             new SchoolResponseDto(
                 school.Id,
                 school.Name,
-                school.Code.Value,
-                school.Line1,
-                school.City,
-                school.State,
-                school.Country,
-                school.PostalCode
-                
+                school.Code,
+                school.Address.Line1,
+                school.Address.City,
+                school.Address.State,
+                school.Address.Country,
+                school.Address.PostalCode,
+                school.PhotoUrl
             ));
     }
 }

@@ -1,4 +1,4 @@
-using FluentValidation.AspNetCore;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
@@ -9,17 +9,12 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ---------------- Controllers ----------------
+//builder.Services.AddControllers();
 
-builder.Services.AddControllers();
-
-// ---------------- Controllers + Validation ----------------
-builder.Services.AddControllers()
-    .AddFluentValidation(cfg =>
-    {
-        cfg.RegisterValidatorsFromAssembly(
-            typeof(School.Application.DependencyInjection).Assembly);
-    });
+// ---------------- FluentValidation (LATEST WAY) ----------------
+builder.Services.AddValidatorsFromAssembly(
+    typeof(School.Application.DependencyInjection).Assembly);
 
 // ---------------- Application Layer ----------------
 builder.Services.AddSchoolApplication();
@@ -46,55 +41,31 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwt["Issuer"],
             ValidAudience = jwt["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwt["Key"]!))
+                Encoding.UTF8.GetBytes(jwt["Key"]!)
+            )
         };
     });
 
 builder.Services.AddAuthorization();
 
-// ---------------- Swagger ----------------
+// ---------------- OpenAPI + Scalar ----------------
 builder.Services.AddEndpointsApiExplorer();
-
-//builder.Services.AddSwaggerGen(options =>
-//{
-//    options.AddSecurityDefinition("Bearer", new()
-//    {
-//        Name = "Authorization",
-//        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-//        Scheme = "Bearer",
-//        BearerFormat = "JWT",
-//        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-//        Description = "Enter: Bearer {your JWT token}"
-//    });
-
-//    options.AddSecurityRequirement(new()
-//    {
-//        {
-//            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-//            {
-//                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-//                {
-//                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-//                    Id = "Bearer"
-//                }
-//            },
-//            Array.Empty<string>()
-//        }
-//    });
-//});
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ---------------- HTTP PIPELINE ----------------
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(); // Authorize button
 }
 
 app.UseHttpsRedirection();
+
+// ✅ REQUIRED FOR PHOTO ACCESS
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

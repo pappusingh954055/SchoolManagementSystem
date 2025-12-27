@@ -2,34 +2,31 @@
 using School.Application.Common;
 using School.Application.DTOs;
 using School.Application.Interfaces;
-using School.Domain.Entities;
 using School.Domain.ValueObjects;
 
-namespace School.Application.Commands.CreateSchool;
+namespace School.Application.Commands.UpdateSchool;
 
-public class CreateSchoolCommandHandler
-    : IRequestHandler<CreateSchoolCommand, Result<SchoolResponseDto>>
+public class UpdateSchoolCommandHandler
+    : IRequestHandler<UpdateSchoolCommand, Result<SchoolResponseDto>>
 {
     private readonly ISchoolRepository _repository;
 
-    public CreateSchoolCommandHandler(ISchoolRepository repository)
+    public UpdateSchoolCommandHandler(ISchoolRepository repository)
     {
         _repository = repository;
     }
 
     public async Task<Result<SchoolResponseDto>> Handle(
-        CreateSchoolCommand request,
+        UpdateSchoolCommand request,
         CancellationToken cancellationToken)
     {
         var dto = request.Dto;
 
-        // ✅ Uniqueness check
-        if (await _repository.ExistsByCodeAsync(dto.Code))
-            return Result<SchoolResponseDto>.Failure("School code already exists");
+        var school = await _repository.GetByIdAsync(dto.Id);
+        if (school == null)
+            return Result<SchoolResponseDto>.Failure("School not found");
 
-        // ✅ VALUE OBJECTS
-        var schoolCode = new SchoolCode(dto.Code);
-
+        // ✅ VALUE OBJECT (Address)
         var address = Address.Create(
             dto.Line1,
             dto.City,
@@ -38,18 +35,16 @@ public class CreateSchoolCommandHandler
             dto.PostalCode
         );
 
-        // ✅ ENTITY (FINAL & CORRECT)
-        var school = new School.Domain.Entities.School(
-            schoolCode.Value,
-            dto.Name,
-            address,
-            dto.PhotoUrl
-        );
+        // ✅ DOMAIN STATE UPDATE
+        school.UpdateName(dto.Name);
+        school.UpdateAddress(address);
 
-        await _repository.AddAsync(school);
+        // ⚠ PhotoUrl is updated in API layer (after upload)
+        // school.UpdatePhoto(dto.PhotoUrl);  <-- only if you pass it via command
+
         await _repository.SaveChangesAsync();
 
-        // ✅ RESPONSE DTO
+        // ✅ RESPONSE DTO (READ FROM AGGREGATE)
         return Result<SchoolResponseDto>.Success(
             new SchoolResponseDto(
                 school.Id,
