@@ -1,0 +1,51 @@
+<Solution>
+  <Folder Name="/Services/" />
+  <Folder Name="/Services/Employee/">
+    <Project Path="Employee.API/Employee.API.csproj" Id="130572a1-1114-4454-8c1d-b5e875cff7ba" />
+    <Project Path="Employee.Application/Employee.Application.csproj" Id="e6a6d665-10c4-446b-9d88-c13acbf1a2e9" />
+    <Project Path="Employee.Domain/Employee.Domain.csproj" Id="bd929971-236d-47e3-b24e-0a70b51c724f" />
+    <Project Path="Employee.Infrastructure/Employee.Infrastructure.csproj" Id="07f77a8c-b139-48ec-8663-2e134f17980d" />
+  </Folder>
+  <Folder Name="/Services/Hostel/">
+    <Project Path="Hostel.API/Hostel.API.csproj" Id="9bd732e4-43c0-4c12-a092-659c6e363175" />
+    <Project Path="Hostel.Application/Hostel.Application.csproj" Id="fe488ae8-c510-41d8-af5a-c066aded8fa5" />
+    <Project Path="Hostel.Domain/Hostel.Domain.csproj" Id="78082faf-5c5a-418f-9e24-c6d120ca985b" />
+    <Project Path="Hostel.Infrastructure/Hostel.Infrastructure.csproj" Id="2d074871-dcb0-426f-86f2-4287b3486d2b" />
+  </Folder>
+  <Folder Name="/Services/Identity/">
+    <Project Path="Identity.API/Identity.API.csproj" Id="02b40dbe-35c1-41ae-8cee-d76a6cde496f" />
+    <Project Path="Identity.Application/Identity.Application.csproj" Id="24f1ee80-355d-4e16-bb21-3ffffbce2ae2" />
+    <Project Path="Identity.Domain/Identity.Domain.csproj" Id="00b069fe-e56c-4af5-a384-689f9a9f973f" />
+    <Project Path="Identity.Infrastructure/Identity.Infrastructure.csproj" Id="7e4b1250-e5a3-49b6-923f-536c4dec56fc" />
+  </Folder>
+  <Folder Name="/Services/Library/">
+    <Project Path="Library.API/Library.API.csproj" Id="fde1a8f7-2c02-4115-8f9b-8f189b15895a" />
+    <Project Path="Library.Application/Library.Application.csproj" Id="4d79ccbf-46da-4ec6-a558-1f5dc2624ca6" />
+    <Project Path="Library.Domain/Library.Domain.csproj" Id="4a961f1f-c21c-46e8-b849-4d4df53b85b5" />
+    <Project Path="Library.Infrastructure/Library.Infrastructure.csproj" Id="a6cd3dfa-b4fc-4f08-9042-4a564e1619b5" />
+  </Folder>
+  <Folder Name="/Services/Payroll/">
+    <Project Path="Payroll.API/Payroll.API.csproj" Id="9cf6d587-5541-4699-a8c0-259721e0cf91" />
+    <Project Path="Payroll.Application/Payroll.Application.csproj" Id="6f505719-e1a3-40e2-a337-d9d7e88a70f3" />
+    <Project Path="Payroll.Domain/Payroll.Domain.csproj" Id="c424479b-a5f7-439e-9856-0c4f0c3b4b6f" />
+    <Project Path="Payroll.Infrastructure/Payroll.Infrastructure.csproj" Id="67c8f5ee-97fc-40b8-aecf-00a1213f4de1" />
+  </Folder>
+  <Folder Name="/Services/School/">
+    <Project Path="School.API/School.API.csproj" Id="76794b16-d2f2-4c5d-8232-66786285f084" />
+    <Project Path="School.Application/School.Application.csproj" Id="d982b7a9-fe60-49cb-b4b7-c6282686e79b" />
+    <Project Path="School.Domain/School.Domain.csproj" Id="795f338c-51fa-4a58-8196-c48b0730c4b1" />
+    <Project Path="School.Infrastructure/School.Infrastructure.csproj" Id="d786a28b-42ed-439d-a473-bfe963c633b2" />
+  </Folder>
+  <Folder Name="/Services/Student/">
+    <Project Path="Student.API/Student.API.csproj" Id="ba756068-da64-49ad-ae43-6fd6d100268d" />
+    <Project Path="Student.Application/Student.Application.csproj" Id="908ab90b-6756-4250-b18f-c5d2150143d6" />
+    <Project Path="Student.Domain/Student.Domain.csproj" Id="f21d74e5-3daa-414c-bfbb-c270ba81cdd0" />
+    <Project Path="Student.Infrastructure/Student.Infrastructure.csproj" Id="3acaee44-8ea2-4002-b79a-4d3a4a2b734c" />
+  </Folder>
+  <Folder Name="/shared/" />
+  <Folder Name="/shared/BuildingBlocks/" />
+  <Folder Name="/shared/BuildingBlocks/AuditableEntity/" />
+  <Folder Name="/shared/BuildingBlocks/BaseEntity/" />
+  <Folder Name="/shared/BuildingBlocks/Exceptions/" />
+  <Folder Name="/shared/BuildingBlocks/Result/" />
+</Solution>
