@@ -20,6 +20,10 @@ builder.Services.AddIdentityApplication();
 // -------------------- Infrastructure -----------------
 builder.Services.AddIdentityInfrastructure(builder.Configuration);
 
+builder.Configuration
+    .AddJsonFile("appsettings.json")
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
+
 // Password hasher
 //builder.Services.AddSingleton<IdentityPasswordHasher, IdentityPasswordHasher>();
 builder.Services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
@@ -47,6 +51,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddEndpointsApiExplorer();
+
+
+
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

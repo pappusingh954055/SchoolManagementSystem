@@ -22,6 +22,11 @@ builder.Services.AddSchoolApplication();
 // ---------------- Infrastructure Layer ----------------
 builder.Services.AddSchoolInfrastructure(builder.Configuration);
 
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
+
+
 // ---------------- JWT Authentication ----------------
 var jwt = builder.Configuration.GetSection("Jwt");
 

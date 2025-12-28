@@ -22,6 +22,11 @@ builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddStudentApplication();
 builder.Services.AddStudentInfrastructure(builder.Configuration);
 
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
+
+
 // JWT
 var jwt = builder.Configuration.GetSection("Jwt");
 

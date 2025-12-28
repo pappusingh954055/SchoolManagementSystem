@@ -1,0 +1,37 @@
+﻿services:
+
+  apigateway:
+    container_name: apigateway
+    build:
+      context: .
+      dockerfile: ApiGateway.API/Dockerfile
+    ports:
+      - "9000:443"
+    depends_on:
+      - identity
+      - school
+      - student
+
+  identity:
+    container_name: identity-api
+    build:
+      context: .
+      dockerfile: Identity.API/Dockerfile
+    ports:
+      - "7046:443"
+
+  school:
+    container_name: school-api
+    build:
+      context: .
+      dockerfile: School.API/Dockerfile
+    ports:
+      - "7030:443"        
+
+  student:
+    container_name: student-api
+    build:
+      context: .
+      dockerfile: Student.API/Dockerfile
+    ports:
+      - "7169:443"
