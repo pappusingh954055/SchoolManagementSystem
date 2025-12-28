@@ -34,4 +34,26 @@ public class UserRepository : IUserRepository
         await _context.RefreshTokens.AddAsync(refreshToken);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
+    {
+        return await _context.Users
+            .Include(u => u.RefreshTokens)
+            .Include(u => u.Roles)
+            .FirstOrDefaultAsync(u =>
+                u.RefreshTokens.Any(rt => rt.Token == refreshToken));
+    }
+
+    public async Task<User?> GetByIdAsync(Guid id)
+    {
+        return await _context.Users
+            .Include(u => u.Roles)
+            .Include(u => u.RefreshTokens)
+            .FirstOrDefaultAsync(u => u.Id == id);
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
+    }
 }

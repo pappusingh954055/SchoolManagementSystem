@@ -1,4 +1,6 @@
-﻿using Identity.Application.Commands.RegisterUser;
+﻿using Identity.API.Contracts;
+using Identity.Application.Commands.RefreshToken;
+using Identity.Application.Commands.RegisterUser;
 using Identity.Application.Queries.LoginUser;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -54,5 +56,23 @@ public class AuthController : ControllerBase
     public IActionResult Secure()
     {
         return Ok("Admin access granted");
+    }
+
+    // ---------------- REFRESH TOKEN ----------------
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Refresh(
+        [FromBody] RefreshTokenRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            return BadRequest("Refresh token is required");
+
+        var result = await _mediator.Send(
+            new RefreshTokenCommand(request.RefreshToken));
+
+        if (!result.IsSuccess)
+            return Unauthorized(result.Error);
+
+        return Ok(result.Value);
     }
 }

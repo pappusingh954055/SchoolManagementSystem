@@ -22,6 +22,9 @@ public class RefreshToken
         IsRevoked = false;
     }
 
+    public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
+    public bool IsActive => !IsExpired && !IsRevoked;
+
     public void AssignUser(Guid userId)
     {
         UserId = userId;

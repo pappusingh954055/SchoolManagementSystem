@@ -1,4 +1,4 @@
-namespace ApiGateway
+namespace ApiGateway.API
 {
     public class WeatherForecast
     {

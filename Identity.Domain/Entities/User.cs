@@ -41,6 +41,12 @@ public class User : AuditableEntity
         _refreshTokens.Add(token);
     }
 
+    public void RemoveRefreshToken(string token)
+    {
+        var refreshToken = _refreshTokens.Single(rt => rt.Token == token);
+        refreshToken.Revoke();
+    }
+
     public void Deactivate()
     {
         IsActive = false;
