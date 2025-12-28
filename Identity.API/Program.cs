@@ -6,6 +6,7 @@ using Identity.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+
 using System.Security.Claims;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,9 +21,12 @@ builder.Services.AddIdentityApplication();
 // -------------------- Infrastructure -----------------
 builder.Services.AddIdentityInfrastructure(builder.Configuration);
 
+
+
 builder.Configuration
-    .AddJsonFile("appsettings.json")
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
 
 // Password hasher
 //builder.Services.AddSingleton<IdentityPasswordHasher, IdentityPasswordHasher>();
@@ -75,5 +79,6 @@ app.UseAuthorization();
 app.UseHttpsRedirection();
 
 app.MapControllers();
+
 
 app.Run();

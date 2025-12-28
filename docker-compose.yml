@@ -1,51 +1,82 @@
-name: schoolmanagement
-
 services:
 
-  apigateway:
-    image: schoolmanagement/apigateway
-    build:
-      context: .
-      dockerfile: ApiGateway.API/Dockerfile
-    container_name: apigateway
-    ports:
-      - "9000:8080"
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
     environment:
-      - ASPNETCORE_ENVIRONMENT=Docker
-    depends_on:
-      - identity-api
-      - school-api
-      - student-api
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - school-network
 
   identity-api:
-    image: schoolmanagement/identity-api
     build:
       context: .
       dockerfile: Identity.API/Dockerfile
     container_name: identity-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ConnectionStrings__IdentityDb: "Server=sqlserver;Database=IdentityDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
     ports:
       - "7046:8080"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Docker
+    depends_on:
+      - sqlserver
+    networks:
+      - school-network
 
   school-api:
-    image: schoolmanagement/school-api
     build:
       context: .
       dockerfile: School.API/Dockerfile
     container_name: school-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ConnectionStrings__SchoolDb: "Server=sqlserver;Database=SchoolDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
     ports:
       - "7030:8080"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Docker
+    depends_on:
+      - sqlserver
+    networks:
+      - school-network
 
   student-api:
-    image: schoolmanagement/student-api
     build:
       context: .
       dockerfile: Student.API/Dockerfile
     container_name: student-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ConnectionStrings__StudentDb: "Server=sqlserver;Database=StudentDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
     ports:
       - "7169:8080"
+    depends_on:
+      - sqlserver
+    networks:
+      - school-network
+
+  apigateway:
+    build:
+      context: .
+      dockerfile: ApiGateway.API/Dockerfile
+    container_name: apigateway
     environment:
-      - ASPNETCORE_ENVIRONMENT=Docker
+      ASPNETCORE_ENVIRONMENT: Docker
+    ports:
+      - "9000:8080"
+    depends_on:
+      - identity-api
+      - school-api
+      - student-api
+    networks:
+      - school-network
+
+volumes:
+  sqlserver_data:
+
+networks:
+  school-network:
+    driver: bridge
