@@ -29,46 +29,35 @@ public class LoginUserQueryHandler
     }
 
     public async Task<Result<AuthResponse>> Handle(
-        LoginUserQuery request,
-        CancellationToken cancellationToken)
+     LoginUserQuery request,
+     CancellationToken cancellationToken)
     {
-        var dto = request.Dto;
-
         var user = await _userRepository
-            .GetWithRolesByEmailAsync(dto.Email);
+            .GetWithRolesByEmailAsync(request.Dto.Email);
 
         if (user == null)
             return Result<AuthResponse>.Failure("Invalid credentials");
 
-        var verifyResult = _passwordHasher.VerifyHashedPassword(
+        var verify = _passwordHasher.VerifyHashedPassword(
             user,
             user.PasswordHash,
-            dto.Password);
+            request.Dto.Password);
 
-        if (verifyResult == PasswordVerificationResult.Failed)
+        if (verify == PasswordVerificationResult.Failed)
             return Result<AuthResponse>.Failure("Invalid credentials");
 
-        // 🔄 Revoke existing active refresh tokens
-        foreach (var token in user.RefreshTokens.Where(t => t.IsActive))
-            token.Revoke();
-
         var roles = user.UserRoles
-            .Select(ur => ur.Role.RoleName)
+            .Select(r => r.Role.RoleName)
             .ToList();
 
-        // 🔐 Generate tokens
         var auth = _jwtService.Generate(user, roles);
 
-        // ➕ Add new refresh token
+        // ✅ FIXED
         user.AddRefreshToken(
-            new RefreshToken(
-                auth.RefreshToken,
-                auth.ExpiresAt.AddDays(7),
-                auth.UserId
-            )
+            auth.RefreshToken,
+            auth.ExpiresAt.AddDays(7)
         );
 
-        // ✅ SINGLE SAVE (UnitOfWork only)
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<AuthResponse>.Success(auth);

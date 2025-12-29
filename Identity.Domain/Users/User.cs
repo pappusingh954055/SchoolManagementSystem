@@ -1,7 +1,6 @@
 ﻿using Identity.Domain.Common;
 using Identity.Domain.Entities;
-
-namespace Identity.Domain.Users;
+using Identity.Domain.Users;
 
 public class User : AuditableEntity
 {
@@ -17,7 +16,7 @@ public class User : AuditableEntity
     public IReadOnlyCollection<UserRole> UserRoles => _userRoles.AsReadOnly();
     public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
 
-    private User() { } // EF Core
+    private User() { }
 
     public User(string userName, string email)
     {
@@ -25,13 +24,11 @@ public class User : AuditableEntity
         Email = email;
     }
 
-    // 🔐 Password
-    public void SetPasswordHash(string passwordHash)
+    public void SetPasswordHash(string hash)
     {
-        PasswordHash = passwordHash;
+        PasswordHash = hash;
     }
 
-    // 🎭 Assign role by RoleId (FK)
     public void AssignRole(int roleId)
     {
         if (_userRoles.Any(r => r.RoleId == roleId))
@@ -40,27 +37,15 @@ public class User : AuditableEntity
         _userRoles.Add(new UserRole(Id, roleId));
     }
 
-    // 🔄 Refresh tokens
-    public void AddRefreshToken(RefreshToken token)
+    // ✅ FIXED
+    public void AddRefreshToken(string token, DateTime expiresAt)
     {
-        if (_refreshTokens.Any(rt => rt.Token == token.Token))
-            return;
-
-        _refreshTokens.Add(token);
+        _refreshTokens.Add(new RefreshToken(token, expiresAt, Id));
     }
 
-    // ✅ Safer revoke (by entity, not string)
-    public void RevokeRefreshToken(RefreshToken token)
+    public void RevokeRefreshToken(string token)
     {
-        if (token == null || !_refreshTokens.Contains(token))
-            return;
-
-        token.Revoke();
-    }
-
-    public void Deactivate()
-    {
-        IsActive = false;
-        SetModified();
+        var rt = _refreshTokens.Single(x => x.Token == token);
+        rt.Revoke();
     }
 }

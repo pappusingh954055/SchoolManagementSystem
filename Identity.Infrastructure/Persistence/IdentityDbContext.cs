@@ -11,7 +11,7 @@ public class IdentityDbContext : DbContext
     {
     }
 
-    public DbSet<Domain.Users.User> Users => Set<Domain.Users.User>();
+    public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Domain.Users.UserRole> UserRoles => Set<Domain.Users.UserRole>();
 
