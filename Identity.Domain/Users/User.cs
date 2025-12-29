@@ -40,7 +40,7 @@ public class User : AuditableEntity
     // ✅ FIXED
     public void AddRefreshToken(string token, DateTime expiresAt)
     {
-        _refreshTokens.Add(new RefreshToken(token, expiresAt, Id));
+        _refreshTokens.Add(new RefreshToken(Id, token, expiresAt));
     }
 
     public void RevokeRefreshToken(string token)

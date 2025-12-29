@@ -11,50 +11,44 @@ public class RefreshTokenCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IJwtService _jwtService;
     private readonly IUnitOfWork _uow;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
 
     public RefreshTokenCommandHandler(
         IUserRepository userRepository,
         IJwtService jwtService,
-        IUnitOfWork uow)
+        IUnitOfWork uow,
+        IRefreshTokenRepository refreshTokenRepository)
     {
         _userRepository = userRepository;
         _jwtService = jwtService;
         _uow = uow;
+        _refreshTokenRepository = refreshTokenRepository;
     }
 
     public async Task<Result<AuthResponse>> Handle(
-        RefreshTokenCommand request,
-        CancellationToken cancellationToken)
+    RefreshTokenCommand request,
+    CancellationToken ct)
     {
-        var user = await _userRepository
-            .GetByRefreshTokenAsync(request.RefreshToken);
-
-        if (user == null)
+        var token = await _refreshTokenRepository.GetAsync(request.RefreshToken);
+        if (token == null || !token.IsActive)
             return Result<AuthResponse>.Failure("Invalid refresh token");
 
-        var refreshToken = user.RefreshTokens
-            .Single(rt => rt.Token == request.RefreshToken);
+        await _refreshTokenRepository.RevokeAllAsync(token.UserId);
 
-        if (!refreshToken.IsActive)
-            return Result<AuthResponse>.Failure("Refresh token expired");
-
-        // 🔄 Revoke old token
-        refreshToken.Revoke();
-
-        var roles = user.UserRoles
-            .Select(ur => ur.Role.RoleName)
-            .ToList();
+        var user = await _userRepository.GetByIdAsync(token.UserId);
+        var roles = user!.UserRoles.Select(r => r.Role.RoleName).ToList();
 
         var auth = _jwtService.Generate(user, roles);
 
-        // 🔁 Rotate refresh token
-        user.AddRefreshToken(
-            auth.RefreshToken,
-            auth.ExpiresAt.AddDays(7)
-        );
+        await _refreshTokenRepository.AddAsync(
+            new Domain.Entities.RefreshToken(
+                user.Id,
+                auth.RefreshToken,
+                auth.ExpiresAt.AddDays(7)));
 
-        await _uow.SaveChangesAsync(cancellationToken);
+        await _uow.SaveChangesAsync(ct);
 
         return Result<AuthResponse>.Success(auth);
     }
+
 }

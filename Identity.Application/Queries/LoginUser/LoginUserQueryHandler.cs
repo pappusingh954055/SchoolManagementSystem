@@ -3,42 +3,41 @@ using Identity.Application.DTOs;
 using Identity.Application.Interfaces;
 using Identity.Application.Queries.LoginUser;
 using Identity.Domain.Entities;
-using Identity.Domain.Users;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using System.Linq;
 
 public class LoginUserQueryHandler
     : IRequestHandler<LoginUserQuery, Result<AuthResponse>>
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IPasswordHasher<User> _passwordHasher;
-    private readonly IJwtService _jwtService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUserRepository _users;
+    private readonly IRefreshTokenRepository _tokens;
+    private readonly IPasswordHasher<User> _hasher;
+    private readonly IJwtService _jwt;
+    private readonly IUnitOfWork _uow;
 
     public LoginUserQueryHandler(
-        IUserRepository userRepository,
-        IPasswordHasher<User> passwordHasher,
-        IJwtService jwtService,
-        IUnitOfWork unitOfWork)
+        IUserRepository users,
+        IRefreshTokenRepository tokens,
+        IPasswordHasher<User> hasher,
+        IJwtService jwt,
+        IUnitOfWork uow)
     {
-        _userRepository = userRepository;
-        _passwordHasher = passwordHasher;
-        _jwtService = jwtService;
-        _unitOfWork = unitOfWork;
+        _users = users;
+        _tokens = tokens;
+        _hasher = hasher;
+        _jwt = jwt;
+        _uow = uow;
     }
 
     public async Task<Result<AuthResponse>> Handle(
-     LoginUserQuery request,
-     CancellationToken cancellationToken)
+        LoginUserQuery request,
+        CancellationToken ct)
     {
-        var user = await _userRepository
-            .GetWithRolesByEmailAsync(request.Dto.Email);
-
+        var user = await _users.GetWithRolesByEmailAsync(request.Dto.Email);
         if (user == null)
             return Result<AuthResponse>.Failure("Invalid credentials");
 
-        var verify = _passwordHasher.VerifyHashedPassword(
+        var verify = _hasher.VerifyHashedPassword(
             user,
             user.PasswordHash,
             request.Dto.Password);
@@ -46,19 +45,22 @@ public class LoginUserQueryHandler
         if (verify == PasswordVerificationResult.Failed)
             return Result<AuthResponse>.Failure("Invalid credentials");
 
+        // ✅ SAFE: bulk revoke
+        await _tokens.RevokeAllAsync(user.Id);
+
         var roles = user.UserRoles
             .Select(r => r.Role.RoleName)
             .ToList();
 
-        var auth = _jwtService.Generate(user, roles);
+        var auth = _jwt.Generate(user, roles);
 
-        // ✅ FIXED
-        user.AddRefreshToken(
-            auth.RefreshToken,
-            auth.ExpiresAt.AddDays(7)
-        );
+        await _tokens.AddAsync(
+            new RefreshToken(
+                user.Id,
+                auth.RefreshToken,
+                auth.ExpiresAt.AddDays(7)));
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _uow.SaveChangesAsync(ct);
 
         return Result<AuthResponse>.Success(auth);
     }

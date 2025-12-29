@@ -100,7 +100,29 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Identity.Domain.Users.User", b =>
+            modelBuilder.Entity("Identity.Domain.Users.UserRole", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserId", "RoleId")
+                        .IsUnique();
+
+                    b.ToTable("UserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -137,31 +159,9 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("Identity.Domain.Users.UserRole", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
-
-                    b.HasIndex("UserId", "RoleId")
-                        .IsUnique();
-
-                    b.ToTable("UserRoles", (string)null);
-                });
-
             modelBuilder.Entity("Identity.Domain.Entities.RefreshToken", b =>
                 {
-                    b.HasOne("Identity.Domain.Users.User", "User")
+                    b.HasOne("User", "User")
                         .WithMany("RefreshTokens")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -178,7 +178,7 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Identity.Domain.Users.User", "User")
+                    b.HasOne("User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -189,7 +189,7 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Identity.Domain.Users.User", b =>
+            modelBuilder.Entity("User", b =>
                 {
                     b.Navigation("RefreshTokens");
 
