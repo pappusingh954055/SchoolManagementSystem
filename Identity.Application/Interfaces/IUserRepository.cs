@@ -1,18 +1,16 @@
 ﻿using Identity.Domain.Entities;
+using Identity.Domain.Users;
 
 namespace Identity.Application.Interfaces;
 
 public interface IUserRepository
 {
 
-    Task<User?> GetByIdAsync(Guid id);
-    Task<User?> GetByEmailAsync(string email);
-   
-    Task<User?> GetByRefreshTokenAsync(string refreshToken);
-    // ✅ correct contract
-    Task AddRefreshTokenAsync(RefreshToken refreshToken);
-
+    Task<bool> ExistsByEmailAsync(string email);
     Task AddAsync(User user);
 
-    Task SaveChangesAsync();
+    Task<User?> GetByEmailAsync(string email);
+    Task<User?> GetWithRolesByEmailAsync(string email);
+    Task<User?> GetByRefreshTokenAsync(string refreshToken);
+    Task<User?> GetByIdAsync(Guid id);
 }

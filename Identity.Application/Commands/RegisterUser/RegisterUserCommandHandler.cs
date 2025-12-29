@@ -1,61 +1,54 @@
-﻿using Identity.Application.Common;
-using Identity.Application.DTOs;
+﻿// RegisterUserHandler.cs
+
+using Identity.Application.Commands.RegisterUser;
 using Identity.Application.Interfaces;
-using Identity.Domain.ValueObjects;
+using Identity.Domain.Users;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 
-namespace Identity.Application.Commands.RegisterUser;
-
-public class RegisterUserCommandHandler
-    : IRequestHandler<RegisterUserCommand, Result<AuthResponseDto>>
+public class RegisterUserHandler
+    : IRequestHandler<RegisterUserCommand, Guid>
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IPasswordHasher _passwordHasher;
-    private readonly ITokenService _tokenService;
+    private readonly IUserRepository _users;
+    private readonly IRoleRepository _roles;
+    private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly IUnitOfWork _uow;
 
-    public RegisterUserCommandHandler(
-        IUserRepository userRepository,
-        IPasswordHasher passwordHasher,
-        ITokenService tokenService)
+    public RegisterUserHandler(
+        IUserRepository users,
+        IRoleRepository roles,
+        IPasswordHasher<User> passwordHasher,
+        IUnitOfWork uow)
     {
-        _userRepository = userRepository;
+        _users = users;
+        _roles = roles;
         _passwordHasher = passwordHasher;
-        _tokenService = tokenService;
+        _uow = uow;
     }
 
-    public async Task<Result<AuthResponseDto>> Handle(
+    public async Task<Guid> Handle(
         RegisterUserCommand request,
         CancellationToken cancellationToken)
     {
         var dto = request.Dto;
 
-        var existing = await _userRepository.GetByEmailAsync(dto.Email);
-        if (existing != null)
-            return Result<AuthResponseDto>.Failure("User already exists");
+        if (await _users.ExistsByEmailAsync(dto.Email))
+            throw new InvalidOperationException("Email already exists");
 
-        var email = Email.Create(dto.Email);
-        var passwordHash = _passwordHasher.Hash(dto.Password);
+        var role = await _roles.GetByNameAsync(dto.RoleName)
+            ?? throw new InvalidOperationException("Invalid role");
 
-        var user = new Domain.Entities.User(dto.UserName, email, passwordHash);
-        user.AssignRole(dto.Role);
+        var user = new User(dto.UserName, dto.Email);
 
-        await _userRepository.AddAsync(user);
+        // ✅ HASH PASSWORD HERE
+        var hash = _passwordHasher.HashPassword(user, dto.Password);
+        user.SetPasswordHash(hash);
 
-        var accessToken = _tokenService.GenerateAccessToken(user);
-        var refreshToken = _tokenService.GenerateRefreshToken();
+        user.AssignRole(role.Id);
 
-        refreshToken.AssignUser(user.Id);
+        await _users.AddAsync(user);
+        await _uow.SaveChangesAsync(cancellationToken);
 
-        await _userRepository.AddRefreshTokenAsync(refreshToken);
-
-        return Result<AuthResponseDto>.Success(
-            new AuthResponseDto(
-                user.Id,
-                user.UserName,
-                user.Email.Value,
-                user.Roles.Select(r => r.Name),
-                accessToken,
-                refreshToken.Token
-            ));
+        return user.Id;
     }
 }

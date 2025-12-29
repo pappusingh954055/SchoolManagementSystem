@@ -1,9 +1,9 @@
 ﻿using FluentValidation.AspNetCore;
 using Identity.API.Extensions;
-using Identity.Application.Interfaces;
+using Identity.Domain.Users;
 using Identity.Infrastructure;
-using Identity.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
@@ -18,6 +18,9 @@ builder.Services.AddControllers()
 // -------------------- Application --------------------
 builder.Services.AddIdentityApplication();
 
+
+
+
 // -------------------- Infrastructure -----------------
 builder.Services.AddIdentityInfrastructure(builder.Configuration);
 
@@ -29,8 +32,8 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 // Password hasher
-//builder.Services.AddSingleton<IdentityPasswordHasher, IdentityPasswordHasher>();
-builder.Services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+
 
 // -------------------- JWT Authentication --------------
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -54,9 +57,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddEndpointsApiExplorer();
-
-
 
 
 builder.Services.AddControllers();

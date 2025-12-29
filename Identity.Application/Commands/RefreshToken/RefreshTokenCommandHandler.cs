@@ -1,6 +1,7 @@
 ﻿using Identity.Application.Common;
 using Identity.Application.DTOs;
 using Identity.Application.Interfaces;
+using Identity.Domain.Entities;
 using MediatR;
 
 namespace Identity.Application.Commands.RefreshToken;
@@ -9,14 +10,17 @@ public class RefreshTokenCommandHandler
     : IRequestHandler<RefreshTokenCommand, Result<AuthResponseDto>>
 {
     private readonly IUserRepository _userRepository;
-    private readonly ITokenService _tokenService;
+    private readonly IJwtService _jwtService;
+    private readonly IUnitOfWork _uow;
 
     public RefreshTokenCommandHandler(
         IUserRepository userRepository,
-        ITokenService tokenService)
+        IJwtService jwtService,
+        IUnitOfWork uow)
     {
         _userRepository = userRepository;
-        _tokenService = tokenService;
+        _jwtService = jwtService;
+        _uow = uow;
     }
 
     public async Task<Result<AuthResponseDto>> Handle(
@@ -29,30 +33,39 @@ public class RefreshTokenCommandHandler
         if (user == null)
             return Result<AuthResponseDto>.Failure("Invalid refresh token");
 
-        var refreshToken = user.RefreshTokens
+        var oldToken = user.RefreshTokens
             .Single(rt => rt.Token == request.RefreshToken);
 
-        if (!refreshToken.IsActive)
+        if (!oldToken.IsActive)
             return Result<AuthResponseDto>.Failure("Refresh token expired");
 
-        // 🔐 Rotate tokens
-        user.RemoveRefreshToken(refreshToken.Token);
+        // 🔄 Revoke old token
+        oldToken.Revoke();
 
-        var newRefreshToken = _tokenService.GenerateRefreshToken();
-        user.AddRefreshToken(newRefreshToken);
+        // 🔐 Generate new tokens
+        var roles = user.UserRoles
+            .Select(ur => ur.Role.RoleName)
+            .ToList();
 
-        var accessToken = _tokenService.GenerateAccessToken(user);
+        var auth = _jwtService.Generate(user, roles);
 
-        await _userRepository.SaveChangesAsync();
+        // ✅ Persist new refresh token
+        user.AddRefreshToken(new Domain.Entities.RefreshToken(
+            auth.RefreshToken,
+            auth.ExpiresAt,
+            user.Id
+        ));
 
+        await _uow.SaveChangesAsync(cancellationToken);
+
+        // ✅ MAP → API RESPONSE DTO
         return Result<AuthResponseDto>.Success(
-            new AuthResponseDto(
-                user.Id,
-                user.UserName,
-                user.Email.Value,
-                user.Roles.Select(r => r.Name),
-                accessToken,
-                newRefreshToken.Token
-            ));
+            new AuthResponseDto
+            {
+                UserId = user.Id,
+                AccessToken = auth.AccessToken,
+                RefreshToken = auth.RefreshToken,
+                Roles = roles
+            });
     }
 }

@@ -1,9 +1,8 @@
-﻿using Identity.API.Contracts;
+﻿using Identity.Application.Commands.RegisterUser;
 using Identity.Application.Commands.RefreshToken;
-using Identity.Application.Commands.RegisterUser;
+using Identity.Application.DTOs;
 using Identity.Application.Queries.LoginUser;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.API.Controllers;
@@ -19,18 +18,20 @@ public class AuthController : ControllerBase
         _mediator = mediator;
     }
 
+    // ---------------- REGISTER ----------------
     [HttpPost("register")]
     public async Task<IActionResult> Register(
         [FromBody] RegisterUserCommand command)
     {
-        var result = await _mediator.Send(command);
+        var userId = await _mediator.Send(command);
 
-        if (!result.IsSuccess)
-            return BadRequest(result.Error);
-
-        return Ok(result.Value);
+        return Ok(new
+        {
+            UserId = userId
+        });
     }
 
+    // ---------------- LOGIN ----------------
     [HttpPost("login")]
     public async Task<IActionResult> Login(
         [FromBody] LoginUserQuery query)
@@ -43,24 +44,8 @@ public class AuthController : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh(
-    [FromBody] string refreshToken)
-    {
-        // Will be implemented fully later
-        return Ok("Refresh token logic ready");
-    }
-
-    [Authorize(Roles = "Admin")]
-    [HttpGet("secure")]
-    public IActionResult Secure()
-    {
-        return Ok("Admin access granted");
-    }
-
     // ---------------- REFRESH TOKEN ----------------
     [HttpPost("refresh")]
-    [AllowAnonymous]
     public async Task<IActionResult> Refresh(
         [FromBody] RefreshTokenRequest request)
     {

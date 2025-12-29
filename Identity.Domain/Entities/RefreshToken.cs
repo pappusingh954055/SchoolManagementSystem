@@ -3,32 +3,26 @@
 public class RefreshToken
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
-    public string Token { get; private set; }
+    public string Token { get; private set; } = null!;
     public DateTime ExpiresAt { get; private set; }
     public bool IsRevoked { get; private set; }
 
     // FK
     public Guid UserId { get; private set; }
-
-    // Navigation
-    public User? User { get; private set; }
+    public Domain.Users.User? User { get; private set; }
 
     private RefreshToken() { }
 
-    public RefreshToken(string token, DateTime expiresAt)
+    public RefreshToken(string token, DateTime expiresAt, Guid userId)
     {
         Token = token;
         ExpiresAt = expiresAt;
+        UserId = userId;
         IsRevoked = false;
     }
 
     public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
     public bool IsActive => !IsExpired && !IsRevoked;
-
-    public void AssignUser(Guid userId)
-    {
-        UserId = userId;
-    }
 
     public void Revoke()
     {

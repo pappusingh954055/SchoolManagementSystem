@@ -1,4 +1,4 @@
-﻿using Identity.Domain.Entities;
+﻿using Identity.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -16,26 +16,29 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(100);
 
+        builder.Property(x => x.Email)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        builder.HasIndex(x => x.Email)
+            .IsUnique();
+
         builder.Property(x => x.PasswordHash)
             .IsRequired();
 
         builder.Property(x => x.IsActive)
             .IsRequired();
 
-        builder.OwnsOne(x => x.Email, email =>
-        {
-            email.Property(e => e.Value)
-                .HasColumnName("Email")
-                .IsRequired()
-                .HasMaxLength(200);
-        });
-
-        builder.HasMany(x => x.RefreshTokens)
-            .WithOne()
+        // 🔗 User → UserRoles (1:N)
+        builder.HasMany(x => x.UserRoles)
+            .WithOne(ur => ur.User)
+            .HasForeignKey(ur => ur.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(x => x.Roles)
-            .WithOne()
+        // 🔗 User → RefreshTokens (1:N)
+        builder.HasMany(x => x.RefreshTokens)
+            .WithOne(rt => rt.User)
+            .HasForeignKey(rt => rt.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

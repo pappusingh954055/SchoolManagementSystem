@@ -7,11 +7,11 @@ public class LoginUserQueryValidator
 {
     public LoginUserQueryValidator()
     {
-        RuleFor(x => x.Email)
+        RuleFor(x => x.Dto.Email)
             .NotEmpty()
             .EmailAddress();
 
-        RuleFor(x => x.Password)
+        RuleFor(x => x.Dto.Password)
             .NotEmpty();
     }
 }

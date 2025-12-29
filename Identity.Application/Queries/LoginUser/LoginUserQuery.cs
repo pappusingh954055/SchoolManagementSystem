@@ -4,5 +4,5 @@ using MediatR;
 
 namespace Identity.Application.Queries.LoginUser;
 
-public record LoginUserQuery(string Email, string Password)
-    : IRequest<Result<AuthResponseDto>>;
+public record LoginUserQuery(LoginDto Dto)
+    : IRequest<Result<AuthResponse>>;

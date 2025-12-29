@@ -1,0 +1,17 @@
+﻿using Identity.Domain.Users;
+using Identity.Domain.ValueObjects;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Identity.Application.DTOs
+{
+    public class AuthResponse
+    {
+        public Guid UserId { get; init; }
+        public string AccessToken { get; init; } = null!;
+        public string RefreshToken { get; init; } = null!;
+        public DateTime ExpiresAt { get; init; }
+        public List<string> Roles { get; init; } = new();
+    }
+}

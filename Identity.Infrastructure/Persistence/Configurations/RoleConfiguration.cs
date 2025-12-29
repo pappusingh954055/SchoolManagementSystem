@@ -1,8 +1,6 @@
-﻿using Identity.Domain.Entities;
+﻿using Identity.Domain.Roles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Identity.Infrastructure.Persistence.Configurations;
 
 public class RoleConfiguration : IEntityTypeConfiguration<Role>
 {
@@ -12,7 +10,20 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
 
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.Name)
-            .IsRequired();
+        builder.Property(x => x.RoleName)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.HasIndex(x => x.RoleName)
+            .IsUnique();
+
+        // ✅ SEED DATA
+        builder.HasData(
+            new Role(1, "Admin"),
+            new Role(2, "Teacher"),
+            new Role(3, "Student"),
+            new Role(4, "Parent"),
+            new Role(5, "Employee")
+        );
     }
 }

@@ -1,7 +1,9 @@
 ﻿using Identity.Application.Interfaces;
+using Identity.Domain.Users;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Repositories;
 using Identity.Infrastructure.Security;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,10 +21,11 @@ public static class DependencyInjection
                 configuration.GetConnectionString("IdentityDb")));
 
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddSingleton<IdentityPasswordHasher>();
-        services.AddScoped<ITokenService, JwtTokenService>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IJwtService, JwtService>();
 
-
+        services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 
         return services;

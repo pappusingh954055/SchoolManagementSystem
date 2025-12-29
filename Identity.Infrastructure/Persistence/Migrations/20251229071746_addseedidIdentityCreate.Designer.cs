@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Identity.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(IdentityDbContext))]
-    [Migration("20251225084346_addidIdentityCreate")]
-    partial class addidIdentityCreate
+    [Migration("20251229071746_addseedidIdentityCreate")]
+    partial class addseedidIdentityCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,19 +39,71 @@ namespace Identity.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Token")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Token")
+                        .IsUnique();
+
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Identity.Domain.Entities.User", b =>
+            modelBuilder.Entity("Identity.Domain.Roles.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleName")
+                        .IsUnique();
+
+                    b.ToTable("Roles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            RoleName = "Teacher"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            RoleName = "Student"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            RoleName = "Parent"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            RoleName = "Employee"
+                        });
+                });
+
+            modelBuilder.Entity("Identity.Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -59,6 +111,11 @@ namespace Identity.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -72,36 +129,42 @@ namespace Identity.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("UserName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("Identity.Domain.Entities.UserRole", b =>
+            modelBuilder.Entity("Identity.Domain.Users.UserRole", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("RoleId");
 
-                    b.ToTable("UserRole");
+                    b.HasIndex("UserId", "RoleId")
+                        .IsUnique();
+
+                    b.ToTable("UserRoles", (string)null);
                 });
 
             modelBuilder.Entity("Identity.Domain.Entities.RefreshToken", b =>
                 {
-                    b.HasOne("Identity.Domain.Entities.User", "User")
+                    b.HasOne("Identity.Domain.Users.User", "User")
                         .WithMany("RefreshTokens")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -110,46 +173,30 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Identity.Domain.Entities.User", b =>
+            modelBuilder.Entity("Identity.Domain.Users.UserRole", b =>
                 {
-                    b.OwnsOne("Identity.Domain.ValueObjects.Email", "Email", b1 =>
-                        {
-                            b1.Property<Guid>("UserId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)")
-                                .HasColumnName("Email");
-
-                            b1.HasKey("UserId");
-
-                            b1.ToTable("Users");
-
-                            b1.WithOwner()
-                                .HasForeignKey("UserId");
-                        });
-
-                    b.Navigation("Email")
+                    b.HasOne("Identity.Domain.Roles.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
 
-            modelBuilder.Entity("Identity.Domain.Entities.UserRole", b =>
-                {
-                    b.HasOne("Identity.Domain.Entities.User", "User")
-                        .WithMany("Roles")
+                    b.HasOne("Identity.Domain.Users.User", "User")
+                        .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Role");
+
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Identity.Domain.Entities.User", b =>
+            modelBuilder.Entity("Identity.Domain.Users.User", b =>
                 {
                     b.Navigation("RefreshTokens");
 
-                    b.Navigation("Roles");
+                    b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618
         }

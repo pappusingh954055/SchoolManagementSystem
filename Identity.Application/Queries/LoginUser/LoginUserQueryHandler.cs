@@ -1,60 +1,76 @@
 ﻿using Identity.Application.Common;
 using Identity.Application.DTOs;
 using Identity.Application.Interfaces;
+using Identity.Application.Queries.LoginUser;
+using Identity.Domain.Entities;
+using Identity.Domain.Users;
 using MediatR;
-
-namespace Identity.Application.Queries.LoginUser;
+using Microsoft.AspNetCore.Identity;
+using System.Linq;
 
 public class LoginUserQueryHandler
-    : IRequestHandler<LoginUserQuery, Result<AuthResponseDto>>
+    : IRequestHandler<LoginUserQuery, Result<AuthResponse>>
 {
     private readonly IUserRepository _userRepository;
-    private readonly IPasswordHasher _passwordHasher;
-    private readonly ITokenService _tokenService;
+    private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly IJwtService _jwtService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public LoginUserQueryHandler(
         IUserRepository userRepository,
-        IPasswordHasher passwordHasher,
-        ITokenService tokenService)
+        IPasswordHasher<User> passwordHasher,
+        IJwtService jwtService,
+        IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
-        _tokenService = tokenService;
+        _jwtService = jwtService;
+        _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result<AuthResponseDto>> Handle(
+    public async Task<Result<AuthResponse>> Handle(
         LoginUserQuery request,
         CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByEmailAsync(request.Email);
+        var dto = request.Dto;
 
-        if (user == null || !user.IsActive)
-            return Result<AuthResponseDto>.Failure("Invalid credentials");
+        var user = await _userRepository
+            .GetWithRolesByEmailAsync(dto.Email);
 
-        if (!_passwordHasher.Verify(user.PasswordHash, request.Password))
-            return Result<AuthResponseDto>.Failure("Invalid credentials");
+        if (user == null)
+            return Result<AuthResponse>.Failure("Invalid credentials");
 
-        // Generate tokens
-        var accessToken = _tokenService.GenerateAccessToken(user);
-        var refreshToken = _tokenService.GenerateRefreshToken();
+        var verifyResult = _passwordHasher.VerifyHashedPassword(
+            user,
+            user.PasswordHash,
+            dto.Password);
 
-        // Attach FK correctly
-        refreshToken.AssignUser(user.Id);
-        await _userRepository.AddRefreshTokenAsync(refreshToken);
+        if (verifyResult == PasswordVerificationResult.Failed)
+            return Result<AuthResponse>.Failure("Invalid credentials");
 
-        // ✅ KEY FIX: project role names safely
-        var roleNames = user.Roles
-            .Select(r => r.Name)
+        // 🔄 Revoke existing active refresh tokens
+        foreach (var token in user.RefreshTokens.Where(t => t.IsActive))
+            token.Revoke();
+
+        var roles = user.UserRoles
+            .Select(ur => ur.Role.RoleName)
             .ToList();
 
-        return Result<AuthResponseDto>.Success(
-            new AuthResponseDto(
-                user.Id,
-                user.UserName,
-                user.Email.Value,
-                roleNames,
-                accessToken,
-                refreshToken.Token
-            ));
+        // 🔐 Generate tokens
+        var auth = _jwtService.Generate(user, roles);
+
+        // ➕ Add new refresh token
+        user.AddRefreshToken(
+            new RefreshToken(
+                auth.RefreshToken,
+                auth.ExpiresAt.AddDays(7),
+                auth.UserId
+            )
+        );
+
+        // ✅ SINGLE SAVE (UnitOfWork only)
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result<AuthResponse>.Success(auth);
     }
 }

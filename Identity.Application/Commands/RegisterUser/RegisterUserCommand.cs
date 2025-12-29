@@ -5,4 +5,4 @@ using MediatR;
 namespace Identity.Application.Commands.RegisterUser;
 
 public record RegisterUserCommand(RegisterUserDto Dto)
-    : IRequest<Result<AuthResponseDto>>;
+    : IRequest<Guid>;
