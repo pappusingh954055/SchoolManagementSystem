@@ -1,8 +1,10 @@
-﻿using Identity.Application.Commands.RegisterUser;
-using Identity.Application.Commands.RefreshToken;
+﻿using Identity.Application.Commands.Logout;
+using Identity.Application.Commands.RegisterUser;
 using Identity.Application.DTOs;
+using Identity.Application.Interfaces;
 using Identity.Application.Queries.LoginUser;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.API.Controllers;
@@ -13,9 +15,11 @@ public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
 
-    public AuthController(IMediator mediator)
+
+    public AuthController(IMediator mediator  )
     {
         _mediator = mediator;
+
     }
 
     // ---------------- REGISTER ----------------
@@ -60,4 +64,22 @@ public class AuthController : ControllerBase
 
         return Ok(result.Value);
     }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout(
+     [FromBody] LogOutRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefrershToken))
+            return BadRequest("Refresh token is required");
+
+        var result = await _mediator.Send(
+            new LogoutCommand(request.UserId, request.RefrershToken));
+
+        if (!result.IsSuccess)
+            return BadRequest(result.Error);
+
+        return Ok();
+    }
+
 }

@@ -1,5 +1,6 @@
 ﻿using FluentValidation.AspNetCore;
 using Identity.API.Extensions;
+using Identity.Application.Interfaces;
 using Identity.Domain.Users;
 using Identity.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -33,6 +34,8 @@ builder.Configuration
 
 // Password hasher
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 
 // -------------------- JWT Authentication --------------
