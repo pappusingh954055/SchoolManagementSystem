@@ -38,6 +38,8 @@ services:
       ConnectionStrings__SchoolDb: "Server=sqlserver;Database=SchoolDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
     ports:
       - "7030:8080"
+    volumes:
+      - school_uploads:/app/wwwroot/uploads/schools
     depends_on:
       - sqlserver
     networks:
@@ -53,6 +55,8 @@ services:
       ConnectionStrings__StudentDb: "Server=sqlserver;Database=StudentDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
     ports:
       - "7169:8080"
+    volumes:
+      - student_uploads:/app/wwwroot/uploads/students
     depends_on:
       - sqlserver
     networks:
@@ -76,6 +80,8 @@ services:
 
 volumes:
   sqlserver_data:
+  school_uploads:
+  student_uploads:
 
 networks:
   school-network:

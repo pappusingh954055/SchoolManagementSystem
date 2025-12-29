@@ -30,4 +30,5 @@ RUN dotnet publish "./Student.API.csproj" -c $BUILD_CONFIGURATION -o /app/publis
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+RUN mkdir -p /app/wwwroot/uploads/students
 ENTRYPOINT ["dotnet", "Student.API.dll"]
