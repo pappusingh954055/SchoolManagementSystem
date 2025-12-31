@@ -39,7 +39,7 @@ services:
     ports:
       - "7030:8080"
     volumes:
-      - school_uploads:/app/wwwroot/uploads/schools
+      - school_uploads:/app/wwwroot/uploads
     depends_on:
       - sqlserver
     networks:
@@ -56,7 +56,7 @@ services:
     ports:
       - "7169:8080"
     volumes:
-      - student_uploads:/app/wwwroot/uploads/students
+      - student_uploads:/app/wwwroot/uploads
     depends_on:
       - sqlserver
     networks:

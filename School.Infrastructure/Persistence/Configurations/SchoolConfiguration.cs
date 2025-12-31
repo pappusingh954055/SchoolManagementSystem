@@ -24,7 +24,7 @@ public class SchoolConfiguration : IEntityTypeConfiguration<Domain.Entities.Scho
 
         // ---------------- Photo ----------------
         builder.Property(x => x.PhotoUrl)
-               .HasMaxLength(500);
+               .HasMaxLength(500).IsRequired(false);
 
         // ---------------- Address (VALUE OBJECT) ----------------
         builder.OwnsOne(x => x.Address, address =>

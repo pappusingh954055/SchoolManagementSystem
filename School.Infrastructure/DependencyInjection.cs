@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using School.Application.Interfaces;
 using School.Infrastructure.Persistence;
-using School.Infrastructure.Repositories;
 
 namespace School.Infrastructure;
 

@@ -34,7 +34,7 @@ public class StudentConfiguration : IEntityTypeConfiguration<Student.Domain.Enti
                .IsRequired();
 
         builder.Property(x => x.PhotoUrl)
-               .HasMaxLength(500);
+               .HasMaxLength(500).IsRequired(false);
 
         // ✅ Address as Value Object
         builder.OwnsOne(x => x.Address, address =>

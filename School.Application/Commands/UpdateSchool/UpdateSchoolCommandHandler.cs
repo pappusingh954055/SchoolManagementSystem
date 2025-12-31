@@ -10,41 +10,40 @@ public class UpdateSchoolCommandHandler
     : IRequestHandler<UpdateSchoolCommand, Result<SchoolResponseDto>>
 {
     private readonly ISchoolRepository _repository;
+    private readonly IUnitOfWork _uow;
 
-    public UpdateSchoolCommandHandler(ISchoolRepository repository)
+    public UpdateSchoolCommandHandler(
+        ISchoolRepository repository,
+        IUnitOfWork uow)
     {
         _repository = repository;
+        _uow = uow;
     }
 
     public async Task<Result<SchoolResponseDto>> Handle(
-        UpdateSchoolCommand request,
-        CancellationToken cancellationToken)
+     UpdateSchoolCommand request,
+     CancellationToken cancellationToken)
     {
-        var dto = request.Dto;
-
-        var school = await _repository.GetByIdAsync(dto.Id);
+        var school = await _repository.GetByIdAsync(request.Id);
         if (school == null)
             return Result<SchoolResponseDto>.Failure("School not found");
 
-        // ✅ VALUE OBJECT (Address)
         var address = Address.Create(
-            dto.Line1,
-            dto.City,
-            dto.State,
-            dto.Country,
-            dto.PostalCode
+            request.Line1,
+            request.City,
+            request.State,
+            request.Country,
+            request.PostalCode
         );
 
-        // ✅ DOMAIN STATE UPDATE
-        school.UpdateName(dto.Name);
+        school.UpdateName(request.Name);
         school.UpdateAddress(address);
 
-        // ⚠ PhotoUrl is updated in API layer (after upload)
-        // school.UpdatePhoto(dto.PhotoUrl);  <-- only if you pass it via command
+        if (!string.IsNullOrWhiteSpace(request.PhotoUrl))
+            school.UpdatePhoto(request.PhotoUrl);
 
-        await _repository.SaveChangesAsync();
+        await _uow.CommitAsync(cancellationToken);
 
-        // ✅ RESPONSE DTO (READ FROM AGGREGATE)
         return Result<SchoolResponseDto>.Success(
             new SchoolResponseDto(
                 school.Id,

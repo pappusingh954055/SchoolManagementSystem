@@ -34,101 +34,59 @@ namespace School.API.Controllers
                 return NotFound(result.Error);
 
             return Ok(result.Value);
-        }
-
-
-
-        [HttpDelete("{id:guid}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            var result = await _mediator.Send(new DeleteSchoolCommand(id));
-            return result.IsSuccess ? Ok() : NotFound(result.Error);
-        }
-
-        [HttpPost("{schoolId:guid}/photo")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UploadPhoto(Guid schoolId, IFormFile file, [FromServices] IWebHostEnvironment env, [FromServices] ISchoolRepository repository)
-        {
-            if (file == null || file.Length == 0)
-                return BadRequest("Invalid file");
-
-            var school = await repository.GetByIdAsync(schoolId);
-            if (school == null)
-                return NotFound("School not found");
-
-            // ✅ Validate file type
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-
-            if (!allowedExtensions.Contains(extension))
-                return BadRequest("Only JPG and PNG files are allowed");
-
-            // ✅ Create uploads folder
-            var uploadPath = Path.Combine(
-                env.WebRootPath,
-                "uploads",
-                "schools");
-
-            if (!Directory.Exists(uploadPath))
-                Directory.CreateDirectory(uploadPath);
-
-            // ✅ Unique file name
-            var fileName = $"{Guid.NewGuid()}{extension}";
-            var fullPath = Path.Combine(uploadPath, fileName);
-
-            // ✅ Save file
-            using (var stream = new FileStream(fullPath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            // ✅ Save relative URL in DB
-            var photoUrl = $"/uploads/schools/{fileName}";
-            school.UpdatePhoto(photoUrl);
-
-            await repository.SaveChangesAsync();
-
-            return Ok(new
-            {
-                PhotoUrl = photoUrl
-            });
-        }
+        }      
 
 
         // ✅ CREATE SCHOOL WITH PHOTO
     
         [HttpPost]
-        //[Consumes("multipart/form-data")]
-        [Authorize(Roles = "Admin")]
+        [Consumes("multipart/form-data")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromForm] CreateSchoolRequest request)
         {
             string? photoUrl = null;
 
-            if (request.Photo != null)
+            if (request.Photo != null && request.Photo.Length > 0)
             {
-                var extension = Path.GetExtension(request.Photo.FileName).ToLowerInvariant();
+                var extension = Path.GetExtension(request.Photo.FileName)
+                    .ToLowerInvariant();
+
                 var allowed = new[] { ".jpg", ".jpeg", ".png" };
 
                 if (!allowed.Contains(extension))
                     return BadRequest("Only JPG / PNG allowed");
+
+                // ✅ WebRootPath SAFETY CHECK (very important in Docker)
+                if (string.IsNullOrWhiteSpace(_env.WebRootPath))
+                    throw new InvalidOperationException("WebRootPath is not configured");
 
                 var uploadsPath = Path.Combine(
                     _env.WebRootPath,
                     "uploads",
                     "schools");
 
+                // ✅ Ensure directory exists
                 Directory.CreateDirectory(uploadsPath);
 
                 var fileName = $"{Guid.NewGuid()}{extension}";
                 var fullPath = Path.Combine(uploadsPath, fileName);
 
-                using var stream = new FileStream(fullPath, FileMode.Create);
-                await request.Photo.CopyToAsync(stream);
+                // ✅ Use async + FileAccess.Write (prevents file lock issues)
+                await using (var stream = new FileStream(
+                    fullPath,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.None,
+                    bufferSize: 81920,
+                    useAsync: true))
+                {
+                    await request.Photo.CopyToAsync(stream);
+                }
 
-                // ✅ THIS IS WHAT GOES TO DB
+                // ✅ STORE ONLY RELATIVE PATH IN DB
                 photoUrl = $"/uploads/schools/{fileName}";
             }
+
 
             var command = new CreateSchoolCommand(
                 new CreateSchoolDto(
@@ -148,17 +106,16 @@ namespace School.API.Controllers
         }
 
 
-  
+
         // ✅ UPDATE SCHOOL WITH PHOTO
         [HttpPut]
+        [Consumes("multipart/form-data")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update([FromForm] UpdateSchoolRequest request)
         {
-            var school = await _repository.GetByIdAsync(request.Id);
-            if (school == null)
-                return NotFound("School not found");
+            string? photoUrl = null;
 
-            // ---------------- UPDATE PHOTO (OPTIONAL) ----------------
+            // ---------------- PHOTO UPLOAD (CONTROLLER RESPONSIBILITY) ----------------
             if (request.Photo != null)
             {
                 var extension = Path.GetExtension(request.Photo.FileName).ToLowerInvariant();
@@ -177,41 +134,44 @@ namespace School.API.Controllers
                 var fileName = $"{Guid.NewGuid()}{extension}";
                 var fullPath = Path.Combine(uploadPath, fileName);
 
-                using var stream = new FileStream(fullPath, FileMode.Create);
+                await using var stream = new FileStream(fullPath, FileMode.Create);
                 await request.Photo.CopyToAsync(stream);
 
-                var photoUrl = $"/uploads/schools/{fileName}";
-                school.UpdatePhoto(photoUrl);
+                photoUrl = $"/uploads/schools/{fileName}";
             }
 
-            // ---------------- UPDATE DOMAIN STATE (DDD CORRECT) ----------------
-            school.UpdateName(request.Name);
-
-            var address = School.Domain.ValueObjects.Address.Create(
+            // ---------------- SEND COMMAND (CQRS) ----------------
+            var command = new UpdateSchoolCommand(
+                request.Id,
+                request.Name,
                 request.Line1,
                 request.City,
                 request.State,
                 request.Country,
-                request.PostalCode
+                request.PostalCode,
+                photoUrl
             );
 
-            school.UpdateAddress(address);
+            var result = await _mediator.Send(command);
 
-            await _repository.SaveChangesAsync();
+            if (!result.IsSuccess)
+                return BadRequest(result.Error);
 
-            return Ok(new
-            {
-                school.Id,
-                school.Code,
-                school.Name,
-                school.Address.Line1,
-                school.Address.City,
-                school.Address.State,
-                school.Address.Country,
-                school.Address.PostalCode,
-                school.PhotoUrl
-            });
+            return Ok(result.Value);
         }
+
+
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var result = await _mediator.Send(new DeleteSchoolCommand(id));
+
+            if (!result.IsSuccess)
+                return NotFound(result.Error);
+
+            return NoContent();
+        }
+
 
     }
 }

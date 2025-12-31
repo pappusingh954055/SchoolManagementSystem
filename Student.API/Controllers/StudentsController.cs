@@ -27,6 +27,7 @@ public class StudentsController : ControllerBase
 
     // ---------------- CREATE STUDENT ----------------
     [HttpPost]
+    [Consumes("multipart/form-data")]
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<IActionResult> Create([FromForm] CreateStudentRequest request)
     {
@@ -63,6 +64,7 @@ public class StudentsController : ControllerBase
 
     // ---------------- UPDATE STUDENT ----------------
     [HttpPut]
+    [Consumes("multipart/form-data")]
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<IActionResult> Update([FromForm] UpdateStudentRequest request)
     {

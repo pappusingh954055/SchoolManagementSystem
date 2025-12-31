@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using School.Application;
+using School.Application.Interfaces;
 using School.Infrastructure;
+using School.Infrastructure.Persistence;
 using System.Security.Claims;
 using System.Text;
 
@@ -21,6 +23,9 @@ builder.Services.AddSchoolApplication();
 
 // ---------------- Infrastructure Layer ----------------
 builder.Services.AddSchoolInfrastructure(builder.Configuration);
+
+builder.Services.AddScoped<ISchoolRepository, SchoolRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false)

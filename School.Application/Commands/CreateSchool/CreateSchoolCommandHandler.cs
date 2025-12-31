@@ -1,8 +1,6 @@
 ﻿using MediatR;
 using School.Application.Common;
-using School.Application.DTOs;
 using School.Application.Interfaces;
-using School.Domain.Entities;
 using School.Domain.ValueObjects;
 
 namespace School.Application.Commands.CreateSchool;
@@ -11,10 +9,14 @@ public class CreateSchoolCommandHandler
     : IRequestHandler<CreateSchoolCommand, Result<SchoolResponseDto>>
 {
     private readonly ISchoolRepository _repository;
+    private readonly IUnitOfWork _uow;
 
-    public CreateSchoolCommandHandler(ISchoolRepository repository)
+    public CreateSchoolCommandHandler(
+        ISchoolRepository repository,
+        IUnitOfWork uow)
     {
         _repository = repository;
+        _uow = uow;
     }
 
     public async Task<Result<SchoolResponseDto>> Handle(
@@ -38,7 +40,7 @@ public class CreateSchoolCommandHandler
             dto.PostalCode
         );
 
-        // ✅ ENTITY (FINAL & CORRECT)
+        // ✅ ENTITY (KEEPING YOUR CONSTRUCTOR)
         var school = new School.Domain.Entities.School(
             schoolCode.Value,
             dto.Name,
@@ -47,7 +49,9 @@ public class CreateSchoolCommandHandler
         );
 
         await _repository.AddAsync(school);
-        await _repository.SaveChangesAsync();
+
+        // ✅ SINGLE COMMIT (FIX)
+        await _uow.CommitAsync(cancellationToken);
 
         // ✅ RESPONSE DTO
         return Result<SchoolResponseDto>.Success(
