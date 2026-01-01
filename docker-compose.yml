@@ -1,5 +1,10 @@
+﻿version: "3.9"
+
 services:
 
+  # ==========================
+  # SQL SERVER
+  # ==========================
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sqlserver
@@ -13,6 +18,10 @@ services:
     networks:
       - school-network
 
+
+  # ==========================
+  # IDENTITY API
+  # ==========================
   identity-api:
     build:
       context: .
@@ -22,12 +31,16 @@ services:
       ASPNETCORE_ENVIRONMENT: Docker
       ConnectionStrings__IdentityDb: "Server=sqlserver;Database=IdentityDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
     ports:
-      - "7046:8080"
+      - "5001:8080"
     depends_on:
       - sqlserver
     networks:
       - school-network
 
+
+  # ==========================
+  # SCHOOL API
+  # ==========================
   school-api:
     build:
       context: .
@@ -37,7 +50,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Docker
       ConnectionStrings__SchoolDb: "Server=sqlserver;Database=SchoolDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
     ports:
-      - "7030:8080"
+      - "5002:8080"
     volumes:
       - school_uploads:/app/wwwroot/uploads
     depends_on:
@@ -45,6 +58,10 @@ services:
     networks:
       - school-network
 
+
+  # ==========================
+  # STUDENT API
+  # ==========================
   student-api:
     build:
       context: .
@@ -54,7 +71,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Docker
       ConnectionStrings__StudentDb: "Server=sqlserver;Database=StudentDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
     ports:
-      - "7169:8080"
+      - "5003:8080"
     volumes:
       - student_uploads:/app/wwwroot/uploads
     depends_on:
@@ -62,6 +79,29 @@ services:
     networks:
       - school-network
 
+
+  # ==========================
+  # EMPLOYEE API ✅ (NEW)
+  # ==========================
+  employee-api:
+    build:
+      context: .
+      dockerfile: Employee.API/Dockerfile
+    container_name: employee-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ConnectionStrings__EmployeeDb: "Server=sqlserver;Database=EmployeeDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+    ports:
+      - "5004:8080"
+    depends_on:
+      - sqlserver
+    networks:
+      - school-network
+
+
+  # ==========================
+  # API GATEWAY
+  # ==========================
   apigateway:
     build:
       context: .
@@ -75,14 +115,23 @@ services:
       - identity-api
       - school-api
       - student-api
+      - employee-api
     networks:
       - school-network
 
+
+# ==========================
+# VOLUMES
+# ==========================
 volumes:
   sqlserver_data:
   school_uploads:
   student_uploads:
 
+
+# ==========================
+# NETWORK
+# ==========================
 networks:
   school-network:
     driver: bridge

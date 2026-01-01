@@ -5,11 +5,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// ================= JWT (OPTIONAL FOR NOW) =================
-// Keep JWT enabled so gateway can forward tokens later
+// ================= JWT =================
 var jwt = builder.Configuration.GetSection("Jwt");
 
 builder.Services
@@ -34,9 +32,6 @@ builder.Services
         };
     });
 
-// ❌ DO NOT add Authorization globally
-// builder.Services.AddAuthorization();
-
 // ================= YARP =================
 builder.Services
     .AddReverseProxy()
@@ -51,13 +46,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// ❌ Disable auth for now
+// ❌ Keep disabled until everything works
 // app.UseAuthentication();
 // app.UseAuthorization();
 
-app.MapControllers();
-
-// ✅ IMPORTANT: NO RequireAuthorization here
 app.MapReverseProxy();
 
 app.Run();
