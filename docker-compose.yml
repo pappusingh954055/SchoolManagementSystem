@@ -5,19 +5,19 @@ services:
   # ==========================
   # SQL SERVER
   # ==========================
-  sqlserver:
+  schoolsqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sqlserver
+    container_name: schoolsqlserver
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: ${SA_PASSWORD}
+      SA_PASSWORD: "TestPassword12345"
     ports:
-      - "1433:1433"
+      - "8000:1433"
     volumes:
-      - sqlserver_data:/var/opt/mssql
+      - schoolsqlserver_data:/var/opt/mssql
+      - ./backup:/var/opt/mssql/backups
     networks:
       - school-network
-
 
   # ==========================
   # IDENTITY API
@@ -29,14 +29,15 @@ services:
     container_name: identity-api
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
-      ConnectionStrings__IdentityDb: "Server=sqlserver;Database=IdentityDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+      ASPNETCORE_URLS: "http://+:8080;http://+:8081"
+      ConnectionStrings__Default: "Server=schoolsqlserver;Database=IdentityDB;User Id=sa;Password=TestPassword12345;Encrypt=False;TrustServerCertificate=True"
     ports:
-      - "5001:8080"
+      - "3000:8080"
+      - "3001:8081"
     depends_on:
-      - sqlserver
+      - schoolsqlserver
     networks:
       - school-network
-
 
   # ==========================
   # SCHOOL API
@@ -48,16 +49,17 @@ services:
     container_name: school-api
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
-      ConnectionStrings__SchoolDb: "Server=sqlserver;Database=SchoolDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+      ASPNETCORE_URLS: "http://+:8080;http://+:8081"
+      ConnectionStrings__Default: "Server=schoolsqlserver;Database=SchoolDB;User Id=sa;Password=TestPassword12345;Encrypt=False;TrustServerCertificate=True"
     ports:
-      - "5002:8080"
+      - "4000:8080"
+      - "4001:8081"
     volumes:
       - school_uploads:/app/wwwroot/uploads
     depends_on:
-      - sqlserver
+      - schoolsqlserver
     networks:
       - school-network
-
 
   # ==========================
   # STUDENT API
@@ -69,19 +71,20 @@ services:
     container_name: student-api
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
-      ConnectionStrings__StudentDb: "Server=sqlserver;Database=StudentDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+      ASPNETCORE_URLS: "http://+:8080;http://+:8081"
+      ConnectionStrings__Default: "Server=schoolsqlserver;Database=StudentDB;User Id=sa;Password=TestPassword12345;Encrypt=False;TrustServerCertificate=True"
     ports:
-      - "5003:8080"
+      - "5000:8080"
+      - "5001:8081"
     volumes:
       - student_uploads:/app/wwwroot/uploads
     depends_on:
-      - sqlserver
+      - schoolsqlserver
     networks:
       - school-network
 
-
   # ==========================
-  # EMPLOYEE API ✅ (NEW)
+  # EMPLOYEE API
   # ==========================
   employee-api:
     build:
@@ -90,14 +93,15 @@ services:
     container_name: employee-api
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
-      ConnectionStrings__EmployeeDb: "Server=sqlserver;Database=EmployeeDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+      ASPNETCORE_URLS: "http://+:8080;http://+:8081"
+      ConnectionStrings__Default: "Server=schoolsqlserver;Database=EmployeeDB;User Id=sa;Password=TestPassword12345;Encrypt=False;TrustServerCertificate=True"
     ports:
-      - "5004:8080"
+      - "6000:8080"
+      - "6001:8081"
     depends_on:
-      - sqlserver
+      - schoolsqlserver
     networks:
       - school-network
-
 
   # ==========================
   # API GATEWAY
@@ -119,19 +123,11 @@ services:
     networks:
       - school-network
 
-
-# ==========================
-# VOLUMES
-# ==========================
 volumes:
-  sqlserver_data:
+  schoolsqlserver_data:
   school_uploads:
   student_uploads:
 
-
-# ==========================
-# NETWORK
-# ==========================
 networks:
   school-network:
     driver: bridge

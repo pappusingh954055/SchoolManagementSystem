@@ -14,7 +14,7 @@ public static class DependencyInjection
     {
         services.AddDbContext<SchoolDbContext>(options =>
             options.UseSqlServer(
-                configuration.GetConnectionString("SchoolDb")));
+                configuration.GetConnectionString("Default")));
 
         services.AddScoped<ISchoolRepository, SchoolRepository>();
 

@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using School.Application;
@@ -27,9 +28,9 @@ builder.Services.AddSchoolInfrastructure(builder.Configuration);
 builder.Services.AddScoped<ISchoolRepository, SchoolRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-builder.Configuration
-    .AddJsonFile("appsettings.json", optional: false)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
+//builder.Configuration
+//    .AddJsonFile("appsettings.json", optional: false)
+//    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
 
 
 // ---------------- JWT Authentication ----------------
@@ -79,6 +80,12 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<SchoolDbContext>();
+    db.Database.Migrate(); // applies migrations, creates DB if not exists
+}
 
 app.MapControllers();
 

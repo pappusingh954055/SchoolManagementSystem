@@ -18,7 +18,7 @@ public class EmployeesController : ControllerBase
     }
 
     [HttpPost]
-    //[Authorize(Roles ="Admin")]
+    [Authorize(Roles ="Admin")]
     public async Task<IActionResult> Create(CreateEmployeeCommand command)
     {
         var result = await _mediator.Send(command);
@@ -26,6 +26,7 @@ public class EmployeesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Get()
     {
         var result = await _mediator.Send(new GetEmployeesQuery());

@@ -16,7 +16,7 @@ public static class DependencyInjection
         services.AddDbContext<EmployeeDbContext>(options =>
         {
             options.UseSqlServer(
-                configuration.GetConnectionString("EmployeeDb"),
+                configuration.GetConnectionString("Default"),
                 sql =>
                 {
                     sql.EnableRetryOnFailure(

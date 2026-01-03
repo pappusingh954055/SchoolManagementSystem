@@ -2,7 +2,6 @@
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
@@ -28,7 +27,18 @@ RUN dotnet publish "./Student.API.csproj" -c $BUILD_CONFIGURATION -o /app/publis
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
+
+# 🔑 switch to root ONLY for folder + permission setup
+USER root
+
 WORKDIR /app
 COPY --from=publish /app/publish .
-RUN mkdir -p /app/wwwroot/uploads/students
+
+# 📁 create upload folder & assign ownership
+RUN mkdir -p /app/wwwroot/uploads/students \
+    && chown -R $APP_UID:$APP_UID /app/wwwroot
+
+# 🔒 switch back to non-root user (SECURE)
+USER $APP_UID
+
 ENTRYPOINT ["dotnet", "Student.API.dll"]

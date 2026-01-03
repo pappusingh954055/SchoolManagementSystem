@@ -27,6 +27,7 @@ namespace School.API.Controllers
 
         // ---------------- Get School By Id ----------------
         [HttpGet("{id:guid}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var result = await _mediator.Send(new GetSchoolByIdQuery(id));
@@ -41,7 +42,7 @@ namespace School.API.Controllers
     
         [HttpPost]
         [Consumes("multipart/form-data")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromForm] CreateSchoolRequest request)
         {
             string? photoUrl = null;
@@ -162,6 +163,7 @@ namespace School.API.Controllers
 
 
         [HttpDelete("{id:guid}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var result = await _mediator.Send(new DeleteSchoolCommand(id));

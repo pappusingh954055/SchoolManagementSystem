@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Student.API.Helpers;
 using Student.Application;
 using Student.Infrastructure;
+using Student.Infrastructure.Persistence;
 using System.Security.Claims;
 using System.Text;
 
@@ -22,9 +24,9 @@ builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddStudentApplication();
 builder.Services.AddStudentInfrastructure(builder.Configuration);
 
-builder.Configuration
-    .AddJsonFile("appsettings.json", optional: false)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
+//builder.Configuration
+//    .AddJsonFile("appsettings.json", optional: false)
+//    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
 
 
 // JWT
@@ -65,7 +67,11 @@ app.UseHttpsRedirection();
 app.UseStaticFiles(); // ✅ IMPORTANT for photos
 app.UseAuthentication();
 app.UseAuthorization();
-
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<StudentDbContext>();
+    db.Database.Migrate(); // applies migrations, creates DB if not exists
+}
 app.MapControllers();
 
 app.Run();
