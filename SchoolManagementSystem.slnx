@@ -45,6 +45,12 @@
     <Project Path="Student.Domain/Student.Domain.csproj" Id="f21d74e5-3daa-414c-bfbb-c270ba81cdd0" />
     <Project Path="Student.Infrastructure/Student.Infrastructure.csproj" Id="3acaee44-8ea2-4002-b79a-4d3a4a2b734c" />
   </Folder>
+  <Folder Name="/Services/Teacher/">
+    <Project Path="Teacher.API/Teacher.API.csproj" Id="2f3d1604-da7e-478d-a086-8d84d6cbec6e" />
+    <Project Path="Teacher.Application/Teacher.Application.csproj" Id="dd837368-6fa0-472b-b5a5-57c980230fdc" />
+    <Project Path="Teacher.Domain/Teacher.Domain.csproj" Id="42017bb6-0087-4566-95d2-b662b5457742" />
+    <Project Path="Teacher.Infrastructure/Teacher.Infrastructure.csproj" Id="db8a25eb-7de5-4407-91d6-287f745e78ee" />
+  </Folder>
   <Folder Name="/shared/" />
   <Folder Name="/shared/BuildingBlocks/" />
   <Folder Name="/shared/BuildingBlocks/AuditableEntity/" />

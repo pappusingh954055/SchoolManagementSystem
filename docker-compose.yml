@@ -12,7 +12,7 @@ services:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: "TestPassword12345"
     ports:
-      - "8000:1433"
+      - "8500:1433"
     volumes:
       - schoolsqlserver_data:/var/opt/mssql
       - ./backup:/var/opt/mssql/backups
