@@ -21,6 +21,12 @@
     <Project Path="Identity.Domain/Identity.Domain.csproj" Id="00b069fe-e56c-4af5-a384-689f9a9f973f" />
     <Project Path="Identity.Infrastructure/Identity.Infrastructure.csproj" Id="7e4b1250-e5a3-49b6-923f-536c4dec56fc" />
   </Folder>
+  <Folder Name="/Services/Inventory/">
+    <Project Path="Inventory.API/Inventory.API.csproj" Id="a5723f67-ddb8-4533-92cf-4691e9c67041" />
+    <Project Path="Inventory.Application/Inventory.Application.csproj" Id="1817940e-89ef-4650-8345-d86e00669782" />
+    <Project Path="Inventory.Domain/Inventory.Domain.csproj" Id="bdb4c6c1-171e-4ea4-849c-784525b6b006" />
+    <Project Path="Inventory.Infrastructure/Inventory.Infrastructure.csproj" Id="be8cec2d-542f-43b2-8ba3-b8fdc9f79f72" />
+  </Folder>
   <Folder Name="/Services/Library/">
     <Project Path="Library.API/Library.API.csproj" Id="fde1a8f7-2c02-4115-8f9b-8f189b15895a" />
     <Project Path="Library.Application/Library.Application.csproj" Id="4d79ccbf-46da-4ec6-a558-1f5dc2624ca6" />

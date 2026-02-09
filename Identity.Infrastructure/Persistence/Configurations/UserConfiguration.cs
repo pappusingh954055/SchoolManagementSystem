@@ -29,6 +29,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.IsActive)
             .IsRequired();
 
+        // Audit fields configuration
+        builder.Property(x => x.CreatedAt)
+            .IsRequired()
+            .HasDefaultValueSql("GETUTCDATE()");
+
+        builder.Property(x => x.ModifiedAt)
+            .IsRequired(false);
+
         // 🔗 User → UserRoles (1:N)
         builder.HasMany(x => x.UserRoles)
             .WithOne(ur => ur.User)

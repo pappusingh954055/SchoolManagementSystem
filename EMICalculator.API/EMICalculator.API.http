@@ -1,0 +1,6 @@
+@EMICalculator.API_HostAddress = http://localhost:5274
+
+GET {{EMICalculator.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

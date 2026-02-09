@@ -24,4 +24,30 @@ public class IdentityDbContext : DbContext
 
         base.OnModelCreating(modelBuilder);
     }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var entries = ChangeTracker.Entries()
+            .Where(e => e.Entity is Identity.Domain.Common.AuditableEntity &&
+                       (e.State == EntityState.Added || e.State == EntityState.Modified));
+
+        foreach (var entry in entries)
+        {
+            var entity = (Identity.Domain.Common.AuditableEntity)entry.Entity;
+
+            if (entry.State == EntityState.Added)
+            {
+                // Ensure CreatedAt is set to current UTC time
+                var createdAtProperty = entry.Property("CreatedAt");
+                createdAtProperty.CurrentValue = DateTime.UtcNow;
+            }
+
+            if (entry.State == EntityState.Modified)
+            {
+                entity.SetModified();
+            }
+        }
+
+        return base.SaveChangesAsync(cancellationToken);
+    }
 }

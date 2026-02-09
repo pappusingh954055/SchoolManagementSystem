@@ -35,8 +35,8 @@ public class RegisterUserHandler
         if (await _users.ExistsByEmailAsync(dto.Email))
             throw new InvalidOperationException("Email already exists");
 
-        var role = await _roles.GetByNameAsync(dto.RoleName)
-            ?? throw new InvalidOperationException("Invalid role");
+        if (dto.RoleIds == null || dto.RoleIds.Length == 0)
+            throw new InvalidOperationException("At least one role must be specified");
 
         var user = new User(dto.UserName, dto.Email);
 
@@ -44,7 +44,15 @@ public class RegisterUserHandler
         var hash = _passwordHasher.HashPassword(user, dto.Password);
         user.SetPasswordHash(hash);
 
-        user.AssignRole(role.Id);
+        // Assign all roles
+        foreach (var roleId in dto.RoleIds)
+        {
+            var role = await _roles.GetByIdAsync(roleId);
+            if (role == null)
+                throw new InvalidOperationException($"Invalid role ID: {roleId}");
+            
+            user.AssignRole(role.Id);
+        }
 
         await _users.AddAsync(user);
         await _uow.SaveChangesAsync(cancellationToken);
